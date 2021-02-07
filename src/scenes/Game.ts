@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import Chest from "~/classes/Chest";
+import Map from "~/classes/Map";
+import GameManager from "~/gameManager/GameManager";
 import Player from "../classes/Player";
 import Ui from "./Ui";
 
@@ -10,10 +12,8 @@ export default class Game extends Phaser.Scene {
   private chests: Phaser.Physics.Arcade.Group;
   private chestPositions;
   private score = 0;
-  private map;
-  private tiles;
-  private backgroundLayer;
-  private blockedLayer;
+  private map: Map;
+  private gameManager: GameManager;
   constructor() {
     super("Game");
   }
@@ -25,26 +25,25 @@ export default class Game extends Phaser.Scene {
   create() {
     this.createMap();
     this.createAudio();
-
     this.createChests();
-    this.createPlayer();
-    this.addCollisions();
+
     this.createInputs();
+    this.createGameManager();
   }
 
   update() {
-    this.player.update(this.cursors);
+    if (this.player) this.player.update(this.cursors);
   }
 
   createAudio() {
     this.goldPickUpAudio = this.sound.add("goldSound", { loop: false });
   }
 
-  createPlayer() {
+  createPlayer(location) {
     this.player = new Player({
       scene: this,
-      x: 32,
-      y: 32,
+      x: location[0] * 2,
+      y: location[1] * 2,
       texture: "characters",
       moveSpeed: 250,
     });
@@ -84,6 +83,7 @@ export default class Game extends Phaser.Scene {
   }
 
   addCollisions() {
+    this.physics.add.collider(this.player, this.map.blockedLayer);
     // @ts-ignore
     this.physics.add.overlap(
       this.player,
@@ -108,35 +108,15 @@ export default class Game extends Phaser.Scene {
   }
 
   createMap() {
-    // add tilemap
-    this.map = this.make.tilemap({ key: "map" });
-    // add tileset image
-    this.tiles = this.map.addTilesetImage(
-      "background",
-      "background",
-      32,
-      32,
-      1,
-      2
-    );
+    this.map = new Map(this, "map", "background", "background", "blocked");
+  }
 
-    this.backgroundLayer = this.map.createStaticLayer(
-      "background",
-      this.tiles,
-      0,
-      0
-    );
-    this.backgroundLayer.setScale(2);
-
-    this.blockedLayer = this.map.createStaticLayer("blocked", this.tiles, 0, 0);
-    this.blockedLayer.setScale(2);
-    this.physics.world.bounds.width = this.map.widthInPixels * 2;
-    this.physics.world.bounds.height = this.map.heightInPixels * 2;
-    this.cameras.main.setBounds(
-      0,
-      0,
-      this.map.widthInPixels * 2,
-      this.map.heightInPixels * 2
-    );
+  createGameManager() {
+    this.events.on("spawnPlayer", (location) => {
+      this.createPlayer(location);
+      this.addCollisions();
+    });
+    this.gameManager = new GameManager(this, this.map.map.objects);
+    this.gameManager.setup();
   }
 }

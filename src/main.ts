@@ -18,4 +18,9 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [Boot, Game, Title, Ui],
 };
 
-export default new Phaser.Game(config);
+const renderConfig: Phaser.Types.Core.RenderConfig = {
+  pixelArt: true,
+  roundPixels: true,
+};
+
+export default new Phaser.Game({ ...config, ...renderConfig });

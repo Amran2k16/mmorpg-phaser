@@ -24,7 +24,6 @@ export default class Ui extends Phaser.Scene {
   }
   setupEvents() {
     this.gameScene.events.on("updateScore", (score) => {
-      console.log(score);
       this.scoreText.setText(`Coins: ${score}`);
     });
   }
