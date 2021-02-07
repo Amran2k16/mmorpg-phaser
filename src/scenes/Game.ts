@@ -4,6 +4,7 @@ import Map from "~/classes/Map";
 import Monster from "~/classes/Monster";
 import PlayerContainer from "~/classes/player/PlayerContainer";
 import GameManager from "~/gameManager/GameManager";
+import MonsterModel from "~/gameManager/MonsterModel";
 import Player from "../classes/player/Player";
 import Ui from "./Ui";
 
@@ -124,8 +125,10 @@ export default class Game extends Phaser.Scene {
   }
 
   enemyOverlap(player, enemy) {
-    enemy.makeInactive();
-    this.events.emit("destroyEnemy", enemy.id);
+    if (this.player.playerAttacking && !this.player.swordHit) {
+      this.player.swordHit = true;
+      this.events.emit("monsterAttacked", enemy.id);
+    }
   }
 
   createInputs() {
@@ -155,6 +158,28 @@ export default class Game extends Phaser.Scene {
     this.events.on("monsterSpawned", (monster) => {
       this.spawnMonster(monster);
     });
+
+    this.events.on("monsterRemoved", (monsterId) => {
+      // @ts-ignore
+      console.log("Monster should be removed!!");
+      this.monsters.getChildren().forEach((monster: Monster) => {
+        if (monster.id === monsterId) {
+          console.log(monster);
+          monster.makeInactive();
+        }
+      });
+    });
+
+    this.events.on("updateMonsterHealth", (monsterId, health) => {
+      // @ts-ignore
+      this.monsters.getChildren().forEach((monster: Monster) => {
+        if (monster.id === monsterId) {
+          monster.updateHealth(health);
+          // monster.makeInactive();
+        }
+      });
+    });
+
     this.gameManager = new GameManager(this, this.map.map.objects);
     this.gameManager.setup();
   }

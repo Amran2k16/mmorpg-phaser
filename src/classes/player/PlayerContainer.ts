@@ -52,10 +52,13 @@ export default class PlayerContainer extends Phaser.GameObjects.Container {
   update(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
     this.body.setVelocity(0, 0);
     if (cursors.right.isDown) {
+      this.player.flipX = true;
+
       this.body.setVelocityX(this.velocity);
       this.currentDirection = Direction.RIGHT;
       this.weapon.setPosition(40, 0);
     } else if (cursors.left.isDown) {
+      this.player.flipX = false;
       this.body.setVelocityX(-this.velocity);
       this.currentDirection = Direction.LEFT;
       this.weapon.setPosition(-40, 0);
