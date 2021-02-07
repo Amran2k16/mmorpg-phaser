@@ -2,12 +2,13 @@ import Phaser from "phaser";
 import Chest from "~/classes/Chest";
 import Map from "~/classes/Map";
 import Monster from "~/classes/Monster";
+import PlayerContainer from "~/classes/player/PlayerContainer";
 import GameManager from "~/gameManager/GameManager";
-import Player from "../classes/Player";
+import Player from "../classes/player/Player";
 import Ui from "./Ui";
 
 export default class Game extends Phaser.Scene {
-  private player: Player;
+  private player: PlayerContainer;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private goldPickUpAudio: Phaser.Sound.BaseSound;
   private chests: Phaser.Physics.Arcade.Group;
@@ -42,13 +43,14 @@ export default class Game extends Phaser.Scene {
   }
 
   createPlayer(location) {
-    this.player = new Player({
-      scene: this,
-      x: location[0] * 2,
-      y: location[1] * 2,
-      texture: "characters",
-      moveSpeed: 250,
-    });
+    this.player = new PlayerContainer(
+      this,
+      location[0] * 2,
+      location[1] * 2,
+      "characters",
+      0,
+      250
+    );
   }
 
   createGroups() {
