@@ -43,14 +43,17 @@ export default class Game extends Phaser.Scene {
     this.goldPickUpAudio = this.sound.add("goldSound", { loop: false });
   }
 
-  createPlayer(location) {
+  createPlayer(playerObject) {
     this.player = new PlayerContainer(
       this,
-      location[0] * 2,
-      location[1] * 2,
+      playerObject.x * 2,
+      playerObject.y * 2,
       "characters",
       0,
-      250
+      250,
+      playerObject.health,
+      playerObject.maxHealth,
+      playerObject.id
     );
   }
 
@@ -127,7 +130,7 @@ export default class Game extends Phaser.Scene {
   enemyOverlap(player, enemy) {
     if (this.player.playerAttacking && !this.player.swordHit) {
       this.player.swordHit = true;
-      this.events.emit("monsterAttacked", enemy.id);
+      this.events.emit("monsterAttacked", enemy.id, player.id);
     }
   }
 
@@ -137,10 +140,8 @@ export default class Game extends Phaser.Scene {
 
   collectChest(player, chest) {
     this.goldPickUpAudio.play();
-    this.score += 10;
     this.events.emit("updateScore", this.score);
-    chest.makeInactive();
-    this.events.emit("pickUpChest", chest.id);
+    this.events.emit("pickUpChest", chest.id, player.id);
   }
 
   createMap() {
@@ -148,8 +149,8 @@ export default class Game extends Phaser.Scene {
   }
 
   createGameManager() {
-    this.events.on("spawnPlayer", (location) => {
-      this.createPlayer(location);
+    this.events.on("spawnPlayer", (playerObject) => {
+      this.createPlayer(playerObject);
       this.addCollisions();
     });
     this.events.on("chestSpawned", (chest) => {
@@ -169,6 +170,15 @@ export default class Game extends Phaser.Scene {
         }
       });
     });
+    this.events.on("chestRemoved", (chestId) => {
+      // @ts-ignore
+      console.log("Monster should be removed!!");
+      this.chests.getChildren().forEach((chest: any) => {
+        if (chest.id === chestId) {
+          chest.makeInactive();
+        }
+      });
+    });
 
     this.events.on("updateMonsterHealth", (monsterId, health) => {
       // @ts-ignore
@@ -178,6 +188,14 @@ export default class Game extends Phaser.Scene {
           // monster.makeInactive();
         }
       });
+    });
+
+    this.events.on("updatePlayerHealth", (playerId, health) => {
+      this.player.updateHealth(health);
+    });
+
+    this.events.on("respawnPlayer", (playerObject) => {
+      this.player.respawn(playerObject);
     });
 
     this.gameManager = new GameManager(this, this.map.map.objects);
